@@ -4,5 +4,4 @@ __pycache__/
 .cache/
 alerts.log
 output_nv.txt
-*.mp4
 .env
