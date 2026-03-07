@@ -1,0 +1,8 @@
+opencv-python
+torch
+torchvision
+transformers
+numpy
+pillow
+fastapi
+uvicorn
