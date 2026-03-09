@@ -2,31 +2,53 @@ import torch
 from transformers import VideoMAEImageProcessor, VideoMAEForVideoClassification
 
 class ViolenceModel:
-    def __init__(self, model_ckpt="OPear/videomae-large-finetuned-UCF-Crime"):
+    def __init__(self, 
+                 binary_ckpt="Nikeytas/videomae-crime-detector-production-v1",
+                 crime_ckpt="OPear/videomae-large-finetuned-UCF-Crime"):
         """
-        Loads the UCF-Crime customized VideoMAE model.
-        Detects 14 anomalous actions (Fighting, Burglary, Shooting, etc).
+        Two-stage violence detection:
+        1. Binary model (Nikeytas) - decides if violence is present (yes/no)
+        2. Crime classifier (OPear) - identifies the type of crime
         """
-        print(f"Loading Violence Detection Model ({model_ckpt})...")
-        self.processor = VideoMAEImageProcessor.from_pretrained(model_ckpt)
-        self.model = VideoMAEForVideoClassification.from_pretrained(model_ckpt, ignore_mismatched_sizes=True)
-        self.model.eval()
+        print(f"Loading Binary Violence Detector ({binary_ckpt})...")
+        self.binary_processor = VideoMAEImageProcessor.from_pretrained(binary_ckpt)
+        self.binary_model = VideoMAEForVideoClassification.from_pretrained(binary_ckpt)
+        self.binary_model.eval()
+        
+        print(f"Loading Crime Type Classifier ({crime_ckpt})...")
+        self.crime_processor = VideoMAEImageProcessor.from_pretrained(crime_ckpt)
+        self.crime_model = VideoMAEForVideoClassification.from_pretrained(crime_ckpt)
+        self.crime_model.eval()
         
     def predict(self, frames):
         """
-        Classifies the 16 frames.
-        Returns: label string and confidence score.
+        Stage 1: Binary detection (violence vs normal)
+        Stage 2: If violence, classify the crime type
+        Returns: (is_violence, violence_score, crime_label)
         """
-        inputs = self.processor(list(frames), return_tensors="pt")
+        frame_list = list(frames)
         
+        # Stage 1: Binary violence detection
+        inputs = self.binary_processor(frame_list, return_tensors="pt")
         with torch.no_grad():
-            outputs = self.model(**inputs)
-            logits = outputs.logits
-            
-        probabilities = torch.nn.functional.softmax(logits, dim=-1)
-        class_idx = probabilities.argmax(-1).item()
+            logits = self.binary_model(**inputs).logits
+        probs = torch.nn.functional.softmax(logits, dim=-1)
+        # LABEL_1 = violence
+        violence_score = probs[0, 1].item()
         
-        confidence = probabilities[0, class_idx].item()
-        label = self.model.config.id2label.get(class_idx, "Unknown")
+        # Stage 2: Crime type classification (only meaningful if violence detected)
+        inputs = self.crime_processor(frame_list, return_tensors="pt")
+        with torch.no_grad():
+            logits = self.crime_model(**inputs).logits
+        probs = torch.nn.functional.softmax(logits, dim=-1)
         
-        return label, confidence
+        # Get top crime class (skip Normal_Videos_event)
+        crime_label = "Unknown"
+        for idx in probs[0].argsort(descending=True):
+            idx = idx.item()
+            lbl = self.crime_model.config.id2label.get(idx, "Unknown")
+            if "normal" not in lbl.lower():
+                crime_label = lbl
+                break
+        
+        return violence_score, crime_label

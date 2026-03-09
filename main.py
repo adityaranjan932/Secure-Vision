@@ -32,6 +32,15 @@ def main():
     frame_count = 0
     frame_skip = 2  # Standard UCF-Crime tempo-stride (every 2nd frame gives 1-second 16-frame window)
     
+    # Temporal smoothing: track recent anomaly detections
+    VIOLENCE_THRESHOLD = 0.75        # Binary model score to consider as violence
+    CONSECUTIVE_REQUIRED = 2         # Consecutive violence detections needed before alert
+    COOLDOWN_SECONDS = 10            # Minimum seconds between alerts
+    
+    consecutive_violence_count = 0
+    last_crime_label = None
+    last_alert_time = 0
+    
     try:
         while True:
             frame = camera.get_frame()
@@ -50,23 +59,38 @@ def main():
             if buffer.is_full():
                 frames_to_process = buffer.get_frames()
                 
-                label, confidence = violence_model.predict(frames_to_process)
+                violence_score, crime_label = violence_model.predict(frames_to_process)
                 
-                print(f"Prediction: {label} (Confidence: {confidence:.2f})")
+                # Clear buffer after each prediction to avoid overlapping frame reuse
+                buffer.buffer.clear()
                 
-                # The model outputs "Normal Videos" or the name of the crime/anomaly
-                # Threshold lowered to 0.35 because 14 classes spread probabilities thinner
-                if label != "Normal Videos" and confidence > 0.35:
-                    print(f"\n!!! ALERT: {label.upper()} Detected !!!")
+                is_violence = violence_score >= VIOLENCE_THRESHOLD
+                
+                if is_violence:
+                    print(f"⚠ Detected: {crime_label} (Violence Score: {violence_score:.2f})")
+                else:
+                    print(f"✅ Normal - Nothing suspicious happening (Score: {violence_score:.2f})")
+                
+                if is_violence:
+                    consecutive_violence_count += 1
+                    last_crime_label = crime_label
+                else:
+                    consecutive_violence_count = 0
+                    last_crime_label = None
+                
+                # Only alert after consecutive confirmations and cooldown
+                current_time = time.time()
+                if consecutive_violence_count >= CONSECUTIVE_REQUIRED and (current_time - last_alert_time) >= COOLDOWN_SECONDS:
+                    print(f"\n!!! ALERT: {last_crime_label.upper()} Detected (confirmed {consecutive_violence_count}x) !!!")
                     
-                    report = report_model.generate_report(confidence, camera_name=f"Camera ({label})")
+                    report = report_model.generate_report(violence_score, camera_name=f"Camera ({last_crime_label})")
                     
                     print(f"\nSecurity Incident Report:\n{report}\n")
                     
                     logger.log_incident(report)
                     
-                    # Clear buffer immediately to avoid multiple identical reports
-                    buffer.buffer.clear()
+                    consecutive_violence_count = 0
+                    last_alert_time = current_time
                     time.sleep(1) # Small pause
                     
     except KeyboardInterrupt:
