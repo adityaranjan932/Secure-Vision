@@ -6,3 +6,6 @@ numpy
 pillow
 fastapi
 uvicorn
+python-multipart
+aiofiles
+websockets

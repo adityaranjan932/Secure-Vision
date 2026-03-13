@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Vision - AI Violence Detection</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1 class="title">SECURE VISION</h1>
+            <p class="subtitle">AI-POWERED VIOLENCE DETECTION SYSTEM</p>
+        </header>
+
+        <!-- Main Content Grid -->
+        <main class="main-grid">
+            <!-- Left Panel: Video Upload -->
+            <section class="panel upload-panel">
+                <h2 class="panel-title">VIDEO UPLOAD</h2>
+
+                <div class="upload-zone" id="uploadZone">
+                    <div class="upload-icon">▼</div>
+                    <p class="upload-text">Drag & Drop Video File</p>
+                    <p class="upload-subtext">or click to browse</p>
+                    <input type="file" id="fileInput" accept="video/*" hidden>
+                </div>
+
+                <button class="btn btn-primary" id="uploadBtn" disabled>
+                    UPLOAD VIDEO
+                </button>
+
+                <!-- Progress Bar -->
+                <div class="progress-container" id="progressContainer" style="display: none;">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <p class="progress-text" id="progressText">0%</p>
+                </div>
+
+                <!-- Results Container -->
+                <div class="results-container" id="uploadResults">
+                    <h3 class="results-title">PROCESSING RESULTS</h3>
+                    <div class="results-list" id="resultsList">
+                        <p class="placeholder-text">No results yet. Upload a video to begin.</p>
+                    </div>
+                </div>
+
+                <button class="btn btn-secondary" id="downloadBtn" style="display: none;">
+                    DOWNLOAD REPORT
+                </button>
+            </section>
+
+            <!-- Right Panel: Live Camera -->
+            <section class="panel camera-panel">
+                <h2 class="panel-title">LIVE CAMERA STREAM</h2>
+
+                <div class="camera-container">
+                    <video id="cameraFeed" autoplay playsinline></video>
+                    <div class="scanline"></div>
+                    <div class="camera-overlay" id="cameraOverlay">
+                        <p>Initializing camera...</p>
+                    </div>
+                </div>
+
+                <div class="camera-controls">
+                    <button class="btn btn-success" id="startCameraBtn">
+                        START CAMERA
+                    </button>
+                    <button class="btn btn-danger" id="stopCameraBtn" disabled>
+                        STOP CAMERA
+                    </button>
+                    <div class="status-indicator">
+                        <span class="status-dot" id="statusDot"></span>
+                        <span class="status-text" id="statusText">Disconnected</span>
+                    </div>
+                </div>
+
+                <!-- Live Analysis Results -->
+                <div class="analysis-card">
+                    <h3 class="analysis-title">LIVE ANALYSIS</h3>
+                    <div class="analysis-content">
+                        <div class="score-display">
+                            <div class="score-circle" id="scoreCircle">
+                                <span class="score-value" id="scoreValue">0.00</span>
+                            </div>
+                            <p class="score-label">Violence Score</p>
+                        </div>
+                        <div class="analysis-info">
+                            <p class="info-item">
+                                <span class="info-label">Status:</span>
+                                <span class="info-value" id="liveStatus">NO VIOLENCE DETECTED</span>
+                            </p>
+                            <p class="info-item">
+                                <span class="info-label">Crime Type:</span>
+                                <span class="info-value" id="crimeType">NONE</span>
+                            </p>
+                            <p class="info-item">
+                                <span class="info-label">Last Update:</span>
+                                <span class="info-value" id="lastUpdate">--:--:--</span>
+                            </p>
+                        </div>
+                    </div>
+                    <!-- Scene Description -->
+                    <div class="scene-description" id="sceneDescription" style="display: none;">
+                        <p class="scene-description-label">Scene Description:</p>
+                        <p class="scene-description-text" id="sceneDescriptionText">--</p>
+                    </div>
+                </div>
+
+                <!-- Alert History -->
+                <div class="alert-history">
+                    <h3 class="alert-title">ALERT HISTORY</h3>
+                    <div class="alert-list" id="alertList">
+                        <p class="placeholder-text">No alerts yet</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast"></div>
+
+    <!-- Scripts -->
+    <script src="/static/js/utils.js"></script>
+    <script src="/static/js/upload.js"></script>
+    <script src="/static/js/live.js"></script>
+</body>
+</html>
