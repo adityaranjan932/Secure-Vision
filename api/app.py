@@ -2,10 +2,11 @@
 FastAPI Main Application - Secure Vision Web Interface
 """
 import os
+from pathlib import Path
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import RedirectResponse
+from fastapi.responses import FileResponse
 from api.models.model_manager import ModelManager
 from api.routers import video_upload, live_stream
 
@@ -25,8 +26,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount static files directory
-app.mount("/static", StaticFiles(directory="static"), name="static")
+BASE_DIR = Path(__file__).resolve().parent.parent
+FRONTEND_DIST_DIR = BASE_DIR / "frontend" / "dist"
+
+if FRONTEND_DIST_DIR.exists():
+    assets_dir = FRONTEND_DIST_DIR / "assets"
+    if assets_dir.exists():
+        app.mount("/assets", StaticFiles(directory=assets_dir), name="frontend-assets")
 
 # Global model manager instance
 model_manager = None
@@ -60,8 +66,9 @@ async def startup_event():
 
 @app.get("/")
 async def root():
-    """Redirect root to web interface"""
-    return RedirectResponse(url="/static/index.html")
+    """Serve the React frontend build."""
+    frontend_index = FRONTEND_DIST_DIR / "index.html"
+    return FileResponse(frontend_index)
 
 
 @app.get("/api/health")
