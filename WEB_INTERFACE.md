@@ -103,11 +103,11 @@ python run_web.py
 - **api/models/model_manager.py** - AI model management
 
 ### Frontend (Vanilla JS)
-- **static/index.html** - Main UI
-- **static/css/styles.css** - Cyberpunk styling
-- **static/js/upload.js** - Upload functionality
-- **static/js/live.js** - Camera streaming
-- **static/js/utils.js** - Helper functions
+- **frontend/src/App.jsx** - Main React UI shell
+- **frontend/src/components/UploadPanel.jsx** - Upload interface
+- **frontend/src/components/LivePanel.jsx** - Live camera interface
+- **frontend/src/hooks/useUploadProcessor.js** - Upload processing state
+- **frontend/src/hooks/useLiveCamera.js** - Live stream state
 
 ## 🔧 Configuration
 
