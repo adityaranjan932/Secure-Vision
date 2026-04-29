@@ -1,61 +1,111 @@
-import torch
-from transformers import T5Tokenizer, T5ForConditionalGeneration
+import os
+import datetime
+from groq import Groq
+
+SCENE_TEMPLATES = {
+    "Fighting":       "Multiple individuals appear to be engaged in a physical altercation.",
+    "Assault":        "A person appears to be physically attacking another individual.",
+    "Abuse":          "Aggressive or threatening behavior is observed between individuals.",
+    "Robbery":        "An individual appears to be forcibly taking property from another person.",
+    "Burglary":       "Suspicious unauthorized entry or property access is detected.",
+    "Shooting":       "Individuals appear to be involved in a dangerous armed confrontation.",
+    "Arson":          "Fire or smoke is detected, possibly indicating deliberate ignition.",
+    "Arrest":         "Law enforcement activity involving physical restraint is detected.",
+    "Explosion":      "A sudden violent event or explosion is detected in the scene.",
+    "Stealing":       "An individual appears to be taking property without authorization.",
+    "Shoplifting":    "Suspicious concealment or removal of items without payment is detected.",
+    "Vandalism":      "Deliberate destruction or defacement of property is observed.",
+    "Road Accidents": "A vehicle collision or road accident appears to have occurred.",
+}
+
+DEFAULT_SCENE = "Suspicious aggressive activity is detected in the scene."
+
 
 class ReportModel:
-    def __init__(self, model_name="google/flan-t5-small"):
-        """
-        Loads the Hugging Face Flan-T5 model for report generation.
-        """
-        print(f"Loading Report Generation Model ({model_name})...")
-        self.tokenizer = T5Tokenizer.from_pretrained(model_name)
-        self.model = T5ForConditionalGeneration.from_pretrained(model_name)
-        self.model.eval()
-        
+    def __init__(self):
+        api_key = os.getenv("GROQ_API_KEY")
+        if api_key and api_key != "your_groq_api_key_here":
+            self.client = Groq(api_key=api_key)
+            self.use_groq = True
+            print("Report model ready (Groq API connected).")
+        else:
+            self.client = None
+            self.use_groq = False
+            print("Report model ready (template mode — add GROQ_API_KEY to .env for AI reports).")
+
     def generate_report(self, confidence, camera_name="Entrance Camera"):
-        prompt = (f"Violence detected in surveillance footage.\n"
-                  f"Camera: {camera_name}\n"
-                  f"Confidence: {confidence:.2f}\n"
-                  f"Write a short and professional security incident report indicating that violent activity "
-                  f"was observed and security personnel should investigate immediately.")
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-        inputs = self.tokenizer(prompt, return_tensors="pt")
+        if self.use_groq:
+            try:
+                response = self.client.chat.completions.create(
+                    model="llama-3.1-8b-instant",
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": (
+                                "You are a professional security incident report writer. "
+                                "Write concise, formal security reports in 3-4 sentences. "
+                                "Always include: what was detected, confidence level, camera location, "
+                                "and recommended action. Be direct and professional."
+                            )
+                        },
+                        {
+                            "role": "user",
+                            "content": (
+                                f"Generate a security incident report for the following:\n"
+                                f"Camera: {camera_name}\n"
+                                f"Time: {timestamp}\n"
+                                f"Confidence: {confidence:.0%}\n"
+                                f"Status: Violent activity detected\n"
+                            )
+                        }
+                    ],
+                    max_tokens=150,
+                    temperature=0.3
+                )
+                return response.choices[0].message.content.strip()
+            except Exception as e:
+                print(f"Groq API error: {e} — falling back to template")
 
-        with torch.no_grad():
-            outputs = self.model.generate(
-                **inputs,
-                max_length=150,
-                temperature=0.7,
-                do_sample=True,
-                repetition_penalty=1.2
-            )
-
-        report = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
-        return report
+        return (
+            f"SECURITY INCIDENT REPORT\n"
+            f"Time: {timestamp}\n"
+            f"Camera: {camera_name}\n"
+            f"Confidence: {confidence:.0%}\n"
+            f"Status: VIOLENT ACTIVITY DETECTED\n"
+            f"Action Required: Security personnel must investigate immediately."
+        )
 
     def generate_scene_description(self, confidence, crime_label="Unknown"):
-        """
-        Generate a descriptive reasoning of what's happening in the scene.
-        For example: "Two persons appear to be having an intense conversation and may have fought together"
-        """
-        prompt = (f"Describe what is happening in this video surveillance scene.\n"
-                  f"Type of violence detected: {crime_label}\n"
-                  f"Confidence level: {confidence:.2f}\n"
-                  f"Describe in one sentence what appears to be happening between the people in the scene. "
-                  f"For example: 'Two persons appear to be having an intense conversation and may have fought together' "
-                  f"or 'Multiple individuals engaged in physical altercation' "
-                  f"or 'Person appears to be exhibiting aggressive behavior towards another'.")
+        if self.use_groq and crime_label and crime_label != "Unknown":
+            try:
+                response = self.client.chat.completions.create(
+                    model="llama-3.1-8b-instant",
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": (
+                                "You are a surveillance analyst. Describe what is happening in one "
+                                "short sentence based on the detected crime type. Be factual and concise. "
+                                "Do NOT mention weapons or specific details not provided. "
+                                "Only describe what the crime type implies in a surveillance context."
+                            )
+                        },
+                        {
+                            "role": "user",
+                            "content": (
+                                f"Crime type detected: {crime_label}\n"
+                                f"Confidence: {confidence:.0%}\n"
+                                f"Describe in one sentence what appears to be happening."
+                            )
+                        }
+                    ],
+                    max_tokens=60,
+                    temperature=0.3
+                )
+                return response.choices[0].message.content.strip()
+            except Exception as e:
+                print(f"Groq API error: {e} — falling back to template")
 
-        inputs = self.tokenizer(prompt, return_tensors="pt")
-
-        with torch.no_grad():
-            outputs = self.model.generate(
-                **inputs,
-                max_length=80,
-                temperature=0.8,
-                do_sample=True,
-                repetition_penalty=1.3,
-                top_p=0.9
-            )
-
-        description = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
-        return description
+        return SCENE_TEMPLATES.get(crime_label, DEFAULT_SCENE)

@@ -9,3 +9,5 @@ uvicorn
 python-multipart
 aiofiles
 websockets
+groq
+python-dotenv
