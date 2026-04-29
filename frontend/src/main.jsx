@@ -1,10 +1,6 @@
 import ReactDOM from "react-dom/client";
 import App from "./App";
-import { ToastProvider } from "./state/ToastContext";
 import "./styles.css";
+import "./pages/design.css";
 
-ReactDOM.createRoot(document.getElementById("root")).render(
-  <ToastProvider>
-    <App />
-  </ToastProvider>
-);
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
