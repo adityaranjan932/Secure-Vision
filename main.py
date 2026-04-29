@@ -1,6 +1,9 @@
 import time
 import argparse
+from dotenv import load_dotenv
 from streaming.camera import Camera
+
+load_dotenv()
 from streaming.frame_buffer import FrameBuffer
 from utils.preprocess import preprocess_frame
 from models.violence_model import ViolenceModel

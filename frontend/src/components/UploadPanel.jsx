@@ -104,6 +104,7 @@ export function UploadPanel() {
                 >
                   <p className="result-frame">
                     Frame {result.frame} / {result.total_frames}
+                    {result.video_time ? ` — ${result.video_time}` : ""}
                   </p>
                   <p className="result-score">Score: {formatScore(result.violence_score)}</p>
                   {result.is_violence && result.crime_label ? (
