@@ -33,8 +33,9 @@ class ReportModel:
             self.use_groq = False
             print("Report model ready (template mode — add GROQ_API_KEY to .env for AI reports).")
 
-    def generate_report(self, confidence, camera_name="Entrance Camera"):
+    def generate_report(self, confidence, camera_name="Entrance Camera", video_time=None):
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        time_info = f"Video Timestamp: {video_time}\n" if video_time else ""
 
         if self.use_groq:
             try:
@@ -47,7 +48,8 @@ class ReportModel:
                                 "You are a professional security incident report writer. "
                                 "Write concise, formal security reports in 3-4 sentences. "
                                 "Always include: what was detected, confidence level, camera location, "
-                                "and recommended action. Be direct and professional."
+                                "the exact time it occurred in the video, and recommended action. "
+                                "Be direct and professional."
                             )
                         },
                         {
@@ -55,31 +57,35 @@ class ReportModel:
                             "content": (
                                 f"Generate a security incident report for the following:\n"
                                 f"Camera: {camera_name}\n"
-                                f"Time: {timestamp}\n"
+                                f"Wall Clock Time: {timestamp}\n"
+                                f"{time_info}"
                                 f"Confidence: {confidence:.0%}\n"
                                 f"Status: Violent activity detected\n"
                             )
                         }
                     ],
-                    max_tokens=150,
+                    max_tokens=180,
                     temperature=0.3
                 )
                 return response.choices[0].message.content.strip()
             except Exception as e:
                 print(f"Groq API error: {e} — falling back to template")
 
+        time_line = f"Video Time: {video_time}\n" if video_time else ""
         return (
             f"SECURITY INCIDENT REPORT\n"
-            f"Time: {timestamp}\n"
+            f"Wall Clock Time: {timestamp}\n"
+            f"{time_line}"
             f"Camera: {camera_name}\n"
             f"Confidence: {confidence:.0%}\n"
             f"Status: VIOLENT ACTIVITY DETECTED\n"
             f"Action Required: Security personnel must investigate immediately."
         )
 
-    def generate_scene_description(self, confidence, crime_label="Unknown"):
+    def generate_scene_description(self, confidence, crime_label="Unknown", video_time=None):
         if self.use_groq and crime_label and crime_label != "Unknown":
             try:
+                time_context = f" at {video_time} in the video" if video_time else ""
                 response = self.client.chat.completions.create(
                     model="llama-3.1-8b-instant",
                     messages=[
@@ -87,15 +93,15 @@ class ReportModel:
                             "role": "system",
                             "content": (
                                 "You are a surveillance analyst. Describe what is happening in one "
-                                "short sentence based on the detected crime type. Be factual and concise. "
+                                "short sentence based on the detected crime type and time. Be factual and concise. "
                                 "Do NOT mention weapons or specific details not provided. "
-                                "Only describe what the crime type implies in a surveillance context."
+                                "Include the time of occurrence if provided."
                             )
                         },
                         {
                             "role": "user",
                             "content": (
-                                f"Crime type detected: {crime_label}\n"
+                                f"Crime type detected: {crime_label}{time_context}\n"
                                 f"Confidence: {confidence:.0%}\n"
                                 f"Describe in one sentence what appears to be happening."
                             )

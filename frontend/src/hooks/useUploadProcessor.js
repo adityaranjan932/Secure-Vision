@@ -157,7 +157,10 @@ export function useUploadProcessor() {
 
     state.alerts.forEach((alert, index) => {
       report += `ALERT #${index + 1}\n`;
-      report += `Time: ${formatTimestamp(alert.timestamp * 1000)}\n`;
+      report += `Wall Clock Time: ${formatTimestamp(alert.timestamp * 1000)}\n`;
+      if (alert.video_time) {
+        report += `Video Timestamp: ${alert.video_time}\n`;
+      }
       report += `Frame: ${alert.frame ?? "N/A"}\n`;
       report += `Violence Score: ${formatScore(alert.violence_score)}\n`;
       report += `Crime Type: ${alert.crime_label}\n\n`;
