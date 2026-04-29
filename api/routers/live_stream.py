@@ -13,7 +13,7 @@ from api.models.model_manager import ModelManager
 router = APIRouter()
 
 # Violence detection thresholds
-VIOLENCE_THRESHOLD = 0.75
+VIOLENCE_THRESHOLD = 0.45
 CONSECUTIVE_REQUIRED = 2
 
 

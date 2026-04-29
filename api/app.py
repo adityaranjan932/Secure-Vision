@@ -3,7 +3,10 @@ FastAPI Main Application - Secure Vision Web Interface
 """
 import os
 from pathlib import Path
+from dotenv import load_dotenv
 from fastapi import FastAPI
+
+load_dotenv()
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse

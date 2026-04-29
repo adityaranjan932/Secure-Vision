@@ -2,12 +2,12 @@ import torch
 from transformers import VideoMAEImageProcessor, VideoMAEForVideoClassification
 
 class ViolenceModel:
-    def __init__(self, 
-                 binary_ckpt="Nikeytas/videomae-crime-detector-production-v1",
+    def __init__(self,
+                 binary_ckpt="mitegvg/videomae-small-kinetics-binary-finetuned-xd-violence",
                  crime_ckpt="OPear/videomae-large-finetuned-UCF-Crime"):
         """
         Two-stage violence detection:
-        1. Binary model (Nikeytas) - decides if violence is present (yes/no)
+        1. Binary model (mitegvg, XD-Violence, 82.54% accuracy) - decides if violence is present (yes/no)
         2. Crime classifier (OPear) - identifies the type of crime
         """
         print(f"Loading Binary Violence Detector ({binary_ckpt})...")

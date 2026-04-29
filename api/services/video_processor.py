@@ -8,9 +8,9 @@ from utils.preprocess import preprocess_frame
 from api.models.model_manager import ModelManager
 
 # Violence detection thresholds (same as main.py)
-VIOLENCE_THRESHOLD = 0.75
+VIOLENCE_THRESHOLD = 0.45
 CONSECUTIVE_REQUIRED = 2
-FRAME_SKIP = 2
+FRAME_SKIP = 1
 
 
 async def process_uploaded_video(file_path: str, session_id: str):

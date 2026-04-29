@@ -13,3 +13,4 @@ frontend/dist/
 #python main.py --source videos/v_1.mp4
 #python main.py --source 0
 #python main.py --source videos/NV_1.mp4
+#python main.py --source videos/NV_1.mp4w

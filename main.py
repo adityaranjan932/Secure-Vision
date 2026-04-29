@@ -33,7 +33,7 @@ def main():
     frame_skip = 2  # Standard UCF-Crime tempo-stride (every 2nd frame gives 1-second 16-frame window)
     
     # Temporal smoothing: track recent anomaly detections
-    VIOLENCE_THRESHOLD = 0.75        # Binary model score to consider as violence
+    VIOLENCE_THRESHOLD = 0.45        # Binary model score to consider as violence
     CONSECUTIVE_REQUIRED = 2         # Consecutive violence detections needed before alert
     COOLDOWN_SECONDS = 10            # Minimum seconds between alerts
     
