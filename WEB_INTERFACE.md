@@ -194,6 +194,11 @@ The web interface is built with:
 - Vanilla JavaScript (no framework dependencies)
 - Custom CSS with cyberpunk theme
 
+## Frontend Testing (Avneesh)
+
+- Verified all UI components are working properly
+- Checked API integration with backend
+- Ensured smooth user interaction and responsiveness
 ---
 
 **Built with ❤️ for real-time violence detection**
